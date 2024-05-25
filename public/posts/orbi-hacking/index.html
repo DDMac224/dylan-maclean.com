@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><title>Orbi Hacking &ndash; Dylan Maclean</title>
+<meta name="description" content="My personal blog and website about computers and cyber security.">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8"/>
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css" integrity="sha512-IW0nhlW5MgNydsXJO40En2EoCkTTjZhI3yuODrZIc8cQ4h1XcF53PsqDHa09NqnkXuIe0Oiyyj171BqZFwISBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+<link rel="stylesheet" href="http://localhost:1313/css/palettes/base16-dark.css">
+<link rel="stylesheet" href="http://localhost:1313/css/risotto.css">
+<link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+
+
+
+
+
+
+
+
+
+
+</head>
+
+    <body>
+        <div class="page">
+
+            <header class="page__header"><nav class="page__nav main-nav">
+    <ul>
+      <li class="nomarker"><h1 class="page__logo"><a href="http://localhost:1313/" class="page__logo-inner">Dylan Maclean</a></h1></li>
+    
+    
+    <li class="main-nav__item"><a class="nav-main-item" href="http://localhost:1313/posts/" title="">Posts</a></li>
+    
+    </ul>
+</nav>
+
+</header>
+
+            <section class="page__body">
+    <header class="content__header">
+        <h1>Orbi Hacking</h1>
+    </header>
+    <div class="content__body">
+        <h2 id="intro">Intro</h2>
+<p>I have been watching some hardware hacking videos on YouTube recently and wanted to try for it myself. I found two old routers labeled &ldquo;Orbi.&rdquo; After looking them up, I found that one is the router and the other is called the &ldquo;satellite&rdquo; which to my understanding is just another access point. Neither of them were in use, They also hadn&rsquo;t been updated in a while which made them perfect to try hardware hacking for the first time. My main goal was to dump the firmware and look through it at a later date.</p>
+<h2 id="system-details">System Details</h2>
+<ul>
+<li>Device name: <code>Netgear Orbi RBR50</code></li>
+<li>RAM: <code>512MB</code></li>
+<li>eMMC storage: <code>4GB</code></li>
+<li>Architecture: <code>armv7l</code></li>
+<li>Firmware version: <code>V2.3.5.30</code></li>
+<li>Kernel: <code>Linux RBR50 3.14.77 #1 SMP PREEMPT</code></li>
+<li>U-Boot version: <code>V2012.07</code></li>
+</ul>
+<h2 id="uart">UART</h2>
+<p>I took the board out of the plastic case but left the heat sinks on it, because I might put OpenWRT on it. I don&rsquo;t want to have to reapply thermal paste later on if I can avoid it.</p>
+<p><img src="./img/pcb.jpg" alt=""></p>
+<p>I noticed four pins on the left side of the board that i assumed to be UART.</p>
+<p><img src="./img/uart.jpg" alt=""></p>
+<p>I used a multimeter to check for continuity between the antenna and each pin, I found that the right most pin was continuous, meaning that it was ground. After finding ground, I turned my multimeter to voltage mode and tested each pin from left to right while booting up the router. The left most pin had a constant 3.3V to ground, meaning it was the VCC pin since it was supplying power. The second to the left most pin had a fluctuating voltage to ground, meaning it was the TXD pin because it was sending out data. The second to the right most pin had a  voltage of 0 to ground, meaning it was the RXD pin because nothing was being transmitted through it. This gave me the pinout of:</p>
+<p><img src="./img/uart_labeled.jpg" alt=""></p>
+<h2 id="root-shell">Root Shell</h2>
+<p>I hooked up my UART to USB bridge with the pins and launched <a href="https://github.com/npat-efault/picocom">picocom</a> with the guess baud rate of 115200.</p>
+<pre tabindex="0"><code>$ picocom -b 115200 /dev/ttyUSB0
+</code></pre><p>I hit the power button and got a wall of text of boot messages from U-Boot and the kernel. I noticed the root password getting changed in the wall of text, that is something I will look into later.</p>
+<pre tabindex="0"><code>Changing password for root
+[KC] RBS50 IPP v1.5 Start (Jun  6 2017 17:15:40)
+New password: 
+Password for root changed by root
+Changing password for admin
+New password: traffic_meter start : .
+</code></pre><p>I waited for the router to finish booting and was dropped into an unrestricted root shell.</p>
+<h2 id="firmware-extraction">Firmware Extraction</h2>
+<p>The first thing I did was to run mount to check what parts of the file system were writeable and executable.</p>
+<pre tabindex="0"><code>root@RBS50:/# mount
+rootfs on / type rootfs (rw)
+/dev/root on /rom type squashfs (ro,relatime)
+proc on /proc type proc (rw,nosuid,nodev,noexec,noatime)
+sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,noatime)
+tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noatime)
+overlayfs:/tmp/overlay on / type overlayfs (rw,relatime,lowerdir=/,upperdir=/tmp/overlay)
+tmpfs on /dev type tmpfs (rw,nosuid,relatime,size=512k,mode=755)
+devpts on /dev/pts type devpts (rw,nosuid,noexec,relatime,mode=600)
+debugfs on /sys/kernel/debug type debugfs (rw,noatime)
+/dev/mmcblk0p27 on /tmp/device_tables type ext4 (rw,relatime,data=ordered)
+</code></pre><p>Seeing that <code>/tmp</code> was writeable and executable it worked as a good place to download  an <a href="https://github.com/therealsaumil/static-arm-bins">arm binary of dd</a> to use for firmware extraction.</p>
+<pre tabindex="0"><code>root@RBS50:/# cd /tmp
+root@RBS50:~# wget --no-check-certificate https://github.com/therealsaumil/statiD3
+c-arm-bins/raw/master/dd-armel-static
+--2024-05-24 18:04:06--  https://github.com/therealsaumil/static-arm-bins/raw/master/dd-armel-static
+Resolving github.com... 140.82.113.4
+Connecting to github.com|140.82.113.4|:443... connected.
+WARNING: cannot verify github.com&#39;s certificate, issued by &#39;CN=Sectigo ECC Domain Validation Secure Server CA,O=Sectigo Limited,L=Salford,ST=Greater Manchester,C=GB&#39;:
+  Unable to locally verify the issuer&#39;s authority.
+HTTP request sent, awaiting response... 302 Found
+Location: https://raw.githubusercontent.com/therealsaumil/static-arm-bins/master/dd-armel-static [following]
+--2024-05-24 18:04:06--  https://raw.githubusercontent.com/therealsaumil/static-arm-bins/master/dd-armel-static
+Resolving raw.githubusercontent.com... 2606:50c0:8003::154, 2606:50c0:8001::154, 2606:50c0:8002::154, ...
+Connecting to raw.githubusercontent.com|2606:50c0:8003::154|:443... failed: Network is unreachable.
+Connecting to raw.githubusercontent.com|2606:50c0:8001::154|:443... failed: Network is unreachable.
+Connecting to raw.githubusercontent.com|2606:50c0:8002::154|:443... failed: Network is unreachable.
+Connecting to raw.githubusercontent.com|2606:50c0:8000::154|:443... failed: Network is unreachable.
+Connecting to raw.githubusercontent.com|185.199.111.133|:443... connected.
+WARNING: cannot verify raw.githubusercontent.com&#39;s certificate, issued by &#39;CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1,O=DigiCert Inc,C=US&#39;:
+  Unable to locally verify the issuer&#39;s authority.
+HTTP request sent, awaiting response... 200 OK
+Length: 674832 (659K) [application/octet-stream]
+Saving to: &#39;dd-armel-static&#39;
+
+dd-armel-static     100%[===================&gt;] 659.02K  2.88MB/s    in 0.2s    
+
+2024-05-24 18:04:07 (2.88 MB/s) - &#39;dd-armel-static&#39; saved [674832/674832]
+root@RBS50:~# chmod u+x dd-armel-static
+</code></pre><p>From here I needed some way to take the firmware off the device. Luckily the router has a USB port. I formatted a spare USB thumb drive to FAT32 to avoid any possible compatibility issues, then plugged it into the router. The router automatically mounted the USB drive to <code>tmp/mnt/sda1</code>. Now that I had a place to put the firmware, I checked for block devices in <code>/dev</code>.</p>
+<pre tabindex="0"><code>root@RBS50:~# ls /dev/
+atherosgpio         mmcblk0p15          mmcblk0p4           switch_ssdk
+bus                 mmcblk0p16          mmcblk0p5           tty
+console             mmcblk0p17          mmcblk0p6           ttyMSM0
+cpu_dma_latency     mmcblk0p18          mmcblk0p7           ttyQHS0
+crypto              mmcblk0p19          mmcblk0p8           ttyS0
+full                mmcblk0p2           mmcblk0p9           ttyS1
+fuse                mmcblk0p20          mmcblk0rpmb         ubi_ctrl
+hwrng               mmcblk0p21          msm_sps             urandom
+i2c-0               mmcblk0p22          net                 usblp0
+kmsg                mmcblk0p23          network_latency     usblp1
+log                 mmcblk0p24          network_throughput  usblp2
+mapper              mmcblk0p25          null                usblp3
+mem                 mmcblk0p26          port                usblp4
+mmcblk0             mmcblk0p27          ppp                 usblp5
+mmcblk0boot0        mmcblk0p28          ptmx                usblp6
+mmcblk0boot1        mmcblk0p29          pts                 usblp7
+mmcblk0p1           mmcblk0p3           random              usblp8
+mmcblk0p10          mmcblk0p30          sda                 usblp9
+mmcblk0p11          mmcblk0p31          sda1                watchdog
+mmcblk0p12          mmcblk0p32          sg0                 watchdog0
+mmcblk0p13          mmcblk0p33          shm                 zero
+mmcblk0p14          mmcblk0p34          snd
+root@RBS50:~# blockdev --getsize64 /dev/mmcblk0
+3909091328
+</code></pre><p>Knowing the size of the chip on the device is 4GB; it was clear that <code>mmcblk0</code> was the entire device&rsquo;s storage. At that point, all I had to do was use dd to copy the block device to my USB drive.</p>
+<pre tabindex="0"><code>root@RBS50:~# /tmp/dd-armel-static if=/dev/mmcblk0 of=/tmp/mnt/sda1/mmcblk0.bin
+7634944+0 records in
+7634944+0 records out
+3909091328 bytes (3.9 GB, 3.6 GiB) copied, 760.989 s, 5.1 MB/s
+root@RBS50:~# umount /tmp/mnt/sda1/
+</code></pre><h2 id="conclusion">Conclusion</h2>
+<p>The Orbi was quite insecure on the hardware level which made it a great first target to try hardware hacking. I was easily able to extract the entire storage simply by getting into the UART shell. Later on, I&rsquo;m going to do an in-depth exploration of the firmware image since there were definitely some interesting things i could see at first glance as well as in the boot messages.</p>
+
+    </div>
+    <footer class="content__footer"></footer>
+
+            </section>
+
+            <section class="page__aside">
+                <div class="aside__about">
+<div class="aside__about">
+    <span class="about__logo" role="img">🧑‍💻</span>&nbsp;
+    
+<h1 class="about__title">Dylan Maclean</h1>
+<p class="about__description">My personal blog and website about computers and cyber security.</p>
+</div>
+
+
+<ul class="aside__social-links">
+    
+    <li>
+        <a href="https://github.com/DDMac224" rel="me" aria-label="GitHub" title="GitHub"><i class="fa-brands fa-github" aria-hidden="true"></i></a>&nbsp;
+    </li>
+    
+    <li>
+        <a href="https://www.linkedin.com/in/dylan-maclean/" rel="me" aria-label="LinkedIn" title="LinkedIn"><i class="fa-brands fa-linkedin" aria-hidden="true"></i></a>&nbsp;
+    </li>
+    
+    <li>
+        <a href="mailto:contact@dylan-maclean.com" rel="me" aria-label="Email" title="Email"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>&nbsp;
+    </li>
+    
+</ul>
+</div>
+                <hr>
+                <div class="aside__content">
+    
+    
+        <p>
+            
+            2024-05-24
+        </p>
+    
+
+    
+	    <hr>
+	    On this page:
+	    <nav id="TableOfContents">
+  <ol>
+    <li><a href="#intro">Intro</a></li>
+    <li><a href="#system-details">System Details</a></li>
+    <li><a href="#uart">UART</a></li>
+    <li><a href="#root-shell">Root Shell</a></li>
+    <li><a href="#firmware-extraction">Firmware Extraction</a></li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ol>
+</nav>
+    
+
+                </div>
+            </section>
+
+            <footer class="page__footer"><p>
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+      
+      
+          
+            
+            
+                <br/><span class="active">$ echo $LANG<br/><b></b></span><br/>
+
+            
+          
+      
+    
+</p>
+<br /><br />
+<p class="copyright"></p>
+<p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+</footer>
+
+        </div>
+    </body>
+
+</html>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on My New Hugo Site</title>
+    <link>http://localhost:1313/posts/</link>
+    <description>Recent content in Posts on My New Hugo Site</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 24 May 2024 17:08:32 -0400</lastBuildDate>
+    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Orbi Hacking</title>
+      <link>http://localhost:1313/posts/orbi-hacking/</link>
+      <pubDate>Fri, 24 May 2024 17:08:32 -0400</pubDate>
+      <guid>http://localhost:1313/posts/orbi-hacking/</guid>
+      <description>Orbi Hacking Intro&#xA;System Details&#xA;UART&#xA;Root Shell&#xA;Firmware Extraction&#xA;Conclusion&#xA;Intro I have been watching some hardware hacking videos on YouTube recently and wanted to try for myself. I found an old pair of Orbis one is a router and another is a satellite. Neither of which were in use, they also hadn&amp;rsquo;t been updated in a while which made them perfect to try hardware hacking for the first time.</description>
+    </item>
+  </channel>
+</rss>
