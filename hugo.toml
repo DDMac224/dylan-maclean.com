@@ -4,12 +4,6 @@ title = 'Dylan Maclean'
 author = 'Dylan Maclean'
 theme = 'risotto'
 DefaultContentLanguage = "en-us"
-enableInlineShortcodes = true
-
-sectionPagesMenu = "main"
-
-[params]
-noindex = false
 
 [params.about]
 title = "Dylan Maclean"

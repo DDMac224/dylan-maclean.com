@@ -6,7 +6,14 @@
     <description>Recent content in About on Dylan Maclean</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate></lastBuildDate>
+    <lastBuildDate>Fri, 24 May 2024 17:08:32 -0400</lastBuildDate>
     <atom:link href="https://dylan-maclean.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Orbi Hacking</title>
+      <link>https://dylan-maclean.com/posts/orbi-hacking/</link>
+      <pubDate>Fri, 24 May 2024 17:08:32 -0400</pubDate>
+      <guid>https://dylan-maclean.com/posts/orbi-hacking/</guid>
+      <description>Intro I have been watching some hardware hacking videos on YouTube recently and wanted to try for it myself. I found two old routers labeled &amp;ldquo;Orbi.&amp;rdquo; After looking them up, I found that one is the router and the other is called the &amp;ldquo;satellite&amp;rdquo; which to my understanding is just another access point. Neither of them were in use, They also hadn&amp;rsquo;t been updated in a while which made them perfect to try hardware hacking for the first time.</description>
+    </item>
   </channel>
 </rss>

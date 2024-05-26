@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on My New Hugo Site</title>
-    <link>http://localhost:1313/posts/</link>
-    <description>Recent content in Posts on My New Hugo Site</description>
+    <title>Posts on Dylan Maclean</title>
+    <link>https://dylan-maclean.com/posts/</link>
+    <description>Recent content in Posts on Dylan Maclean</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Fri, 24 May 2024 17:08:32 -0400</lastBuildDate>
-    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://dylan-maclean.com/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Orbi Hacking</title>
-      <link>http://localhost:1313/posts/orbi-hacking/</link>
+      <link>https://dylan-maclean.com/posts/orbi-hacking/</link>
       <pubDate>Fri, 24 May 2024 17:08:32 -0400</pubDate>
-      <guid>http://localhost:1313/posts/orbi-hacking/</guid>
-      <description>Orbi Hacking Intro&#xA;System Details&#xA;UART&#xA;Root Shell&#xA;Firmware Extraction&#xA;Conclusion&#xA;Intro I have been watching some hardware hacking videos on YouTube recently and wanted to try for myself. I found an old pair of Orbis one is a router and another is a satellite. Neither of which were in use, they also hadn&amp;rsquo;t been updated in a while which made them perfect to try hardware hacking for the first time.</description>
+      <guid>https://dylan-maclean.com/posts/orbi-hacking/</guid>
+      <description>Intro I have been watching some hardware hacking videos on YouTube recently and wanted to try for it myself. I found two old routers labeled &amp;ldquo;Orbi.&amp;rdquo; After looking them up, I found that one is the router and the other is called the &amp;ldquo;satellite&amp;rdquo; which to my understanding is just another access point. Neither of them were in use, They also hadn&amp;rsquo;t been updated in a while which made them perfect to try hardware hacking for the first time.</description>
     </item>
   </channel>
 </rss>
